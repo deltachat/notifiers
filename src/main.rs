@@ -10,7 +10,7 @@ struct Opt {
     /// If set, this will use the sandbox servers, instead of the production ones.
     #[structopt(short, long)]
     sandbox: bool,
-    /// Path to the certificate file.
+    /// Path to the certificate file PKS12.
     #[structopt(long, parse(from_os_str))]
     certificate_file: PathBuf,
     /// Password for the certificate file.
@@ -28,6 +28,8 @@ struct Opt {
     /// The path to the database file.
     #[structopt(long, default_value = "notifiers.db", parse(from_os_str))]
     db: PathBuf,
+    #[structopt(long, default_value = "20m", parse(try_from_str = humantime::parse_duration))]
+    interval: std::time::Duration,
 }
 
 #[async_std::main]
@@ -56,6 +58,7 @@ async fn main() -> Result<()> {
             certificate,
             &opt.password,
             opt.topic.as_ref().map(|s| &**s),
+            opt.interval,
         )
         .await
     });
