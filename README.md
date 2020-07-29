@@ -9,7 +9,7 @@
 
 ```sh
 $ cargo build --release
-$ ./target/release/notifiers --certificate-file <file> --message <message> --password <password>
+$ ./target/release/notifiers --certificate-file <file> --password <password>
 ```
 
 ### Registering devices

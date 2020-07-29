@@ -1,20 +1,15 @@
 use std::path::PathBuf;
 
-use anyhow::Result;
-use async_std::prelude::*;
-use log::*;
+use anyhow::{Context, Result};
 use structopt::StructOpt;
 
-use notifiers::server;
+use notifiers::{notifier, server};
 
 #[derive(Debug, StructOpt)]
 struct Opt {
     /// If set, this will use the sandbox servers, instead of the production ones.
     #[structopt(short, long)]
     sandbox: bool,
-    /// The message for the notification to be sent.
-    #[structopt(long)]
-    message: String,
     /// Path to the certificate file.
     #[structopt(long, parse(from_os_str))]
     certificate_file: PathBuf,
@@ -40,27 +35,29 @@ async fn main() -> Result<()> {
     femme::start();
 
     let opt = Opt::from_args();
+    let endpoint = if opt.sandbox {
+        a2::Endpoint::Sandbox
+    } else {
+        a2::Endpoint::Production
+    };
+    let certificate = std::fs::File::open(&opt.certificate_file).context("invalid certificate")?;
 
     let state = server::State::new(&opt.db)?;
 
     let state2 = state.clone();
-    let server =
-        async_std::task::spawn(
-            async move { server::start(state2, opt.host.clone(), opt.port).await },
-        );
+    let host = opt.host.clone();
+    let port = opt.port;
+    let server = async_std::task::spawn(async move { server::start(state2, host, port).await });
 
     async_std::task::spawn(async move {
-        let db = state.db();
-        let mut interval = async_std::stream::interval(std::time::Duration::from_secs(15));
-        while let Some(_) = interval.next().await {
-            info!("sending notifications");
-            for res in db.iter() {
-                if let Ok((key, _)) = res {
-                    let key = String::from_utf8(key.to_vec()).unwrap();
-                    info!("notify {}", key);
-                }
-            }
-        }
+        notifier::start(
+            state.db(),
+            endpoint,
+            certificate,
+            &opt.password,
+            opt.topic.as_ref().map(|s| &**s),
+        )
+        .await
     });
 
     server.await?;
