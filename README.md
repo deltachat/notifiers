@@ -3,7 +3,7 @@
 > Notify devices. 
 
 
-## Usagee 
+## Usage 
 
 ### Running
 
