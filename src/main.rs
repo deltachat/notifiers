@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
+use async_std::prelude::*;
 use structopt::StructOpt;
 
 use notifiers::{notifier, server};
@@ -51,7 +52,7 @@ async fn main() -> Result<()> {
     let port = opt.port;
     let server = async_std::task::spawn(async move { server::start(state2, host, port).await });
 
-    async_std::task::spawn(async move {
+    let notif = async_std::task::spawn(async move {
         notifier::start(
             state.db(),
             endpoint,
@@ -63,7 +64,7 @@ async fn main() -> Result<()> {
         .await
     });
 
-    server.await?;
+    server.try_join(notif).await?;
 
     Ok(())
 }
