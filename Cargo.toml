@@ -4,14 +4,12 @@ version = "0.1.0"
 authors = ["dignifiedquire <me@dignifiedquire.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-async-std = { version = "1.6", features = ["tokio02", "attributes", "unstable"] }
-a2 = "0.5.3"
+async-std = { version = "1.9", features = ["tokio1", "attributes", "unstable"] }
+a2 = "0.6"
 sled = "0.34.2"
 structopt = "0.3.15"
-tide = "0.12.0"
+tide = "0.16.0"
 anyhow = "1.0.32"
 log = "0.4.11"
 serde = { version = "1.0.114", features = ["derive"] }
