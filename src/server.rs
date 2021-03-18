@@ -54,8 +54,8 @@ struct DeviceQuery {
     token: String,
 }
 
-async fn register_device(req: tide::Request<State>) -> tide::Result<tide::Response> {
-    let query: DeviceQuery = req.query()?;
+async fn register_device(mut req: tide::Request<State>) -> tide::Result<tide::Response> {
+    let query: DeviceQuery = req.body_json().await?;
     info!("register_device {}", query.token);
 
     let db = req.state().db();

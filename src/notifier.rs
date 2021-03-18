@@ -40,7 +40,7 @@ async fn wakeup(db: &sled::Db, client: &Client, topic: Option<&str>) {
         })
         .collect::<Vec<_>>();
 
-    info!("sending notifications to {} devices", tokens.len(),);
+    info!("sending notifications to {} devices", tokens.len());
 
     for device_token in tokens {
         info!("notify: {}", device_token);

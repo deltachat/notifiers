@@ -18,5 +18,5 @@ $ ./target/release/notifiers --certificate-file <file.p12> --password <password>
 ### Registering devices
 
 ```sh
-$ curl -X POST localhost:9000/register?token=<device-token>
+$ curl -X POST -d '{ "token": "<device token>" }' http://localhost:9000/register
 ```
