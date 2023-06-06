@@ -58,7 +58,7 @@ async fn main() -> Result<()> {
             endpoint,
             certificate,
             &opt.password,
-            opt.topic.as_ref().map(|s| &**s),
+            opt.topic.as_deref(),
             opt.interval,
         )
         .await

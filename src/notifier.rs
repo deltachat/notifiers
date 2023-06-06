@@ -24,7 +24,7 @@ pub async fn start(
 
     // create interval
     let mut interval = async_std::stream::interval(interval);
-    while let Some(_) = interval.next().await {
+    while interval.next().await.is_some() {
         wakeup(db, &client, topic).await;
     }
 
