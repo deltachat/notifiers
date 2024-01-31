@@ -10,9 +10,8 @@ pub async fn start(state: State, server: String, port: u16) -> Result<()> {
     app.at("/").get(|_| async { Ok("Hello, world!") });
     app.at("/register").post(register_device);
 
-    let addr = format!("{}:{}", server, port);
-    info!("Listening on {}", &addr);
-    app.listen(addr).await?;
+    info!("Listening on {server}:port");
+    app.listen((server, port)).await?;
     Ok(())
 }
 
