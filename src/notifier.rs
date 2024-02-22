@@ -1,5 +1,6 @@
 use a2::{
-    Client, Endpoint, NotificationBuilder, NotificationOptions, Priority, SilentNotificationBuilder,
+    Client, Endpoint, Error::ResponseError, NotificationBuilder, NotificationOptions, Priority,
+    SilentNotificationBuilder,
 };
 use anyhow::Result;
 use async_std::prelude::*;
@@ -55,22 +56,18 @@ async fn wakeup(db: &sled::Db, client: &Client, topic: Option<&str>) {
         );
 
         match client.send(payload).await {
-            Ok(res) => {
-                match res.code {
-                    200 => {
-                        info!("delivered notification for {}", device_token);
-                    }
-                    410 => {
-                        // no longer active
-                        if let Err(err) = db.remove(&device_token) {
-                            error!("failed to remove {}: {:?}", &device_token, err);
-                        } else {
-                            info!("removed inactive token: {}", &device_token);
-                        }
-                    }
-                    _ => {
-                        warn!("unexpected status: {:?}", res);
-                    }
+            Ok(res) => match res.code {
+                200 => {
+                    info!("delivered notification for {}", device_token);
+                }
+                _ => {
+                    warn!("unexpected status: {:?}", res);
+                }
+            },
+            Err(ResponseError(res)) => {
+                info!("Removing token {} due to error {:?}.", &device_token, res);
+                if let Err(err) = db.remove(&device_token) {
+                    error!("failed to remove {}: {:?}", &device_token, err);
                 }
             }
             Err(err) => {
