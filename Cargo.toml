@@ -17,3 +17,4 @@ serde = { version = "1.0.114", features = ["derive"] }
 femme = "2.1.0"
 humantime = "2.0.1"
 hyper = { version = "0.14", features = ["tcp"] }
+futures = "*"

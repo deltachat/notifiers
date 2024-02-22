@@ -4,6 +4,7 @@ use a2::{
 };
 use anyhow::Result;
 use async_std::prelude::*;
+use futures::future::join_all;
 use log::*;
 
 pub async fn start(
@@ -32,6 +33,39 @@ pub async fn start(
     Ok(())
 }
 
+async fn wakeup_token(db: &sled::Db, client: &Client, device_token: &str, topic: Option<&str>) {
+    info!("notify: {}", device_token);
+
+    let payload = SilentNotificationBuilder::new().build(
+        device_token,
+        NotificationOptions {
+            apns_priority: Some(Priority::Normal),
+            apns_topic: topic,
+            ..Default::default()
+        },
+    );
+
+    match client.send(payload).await {
+        Ok(res) => match res.code {
+            200 => {
+                info!("delivered notification for {}", device_token);
+            }
+            _ => {
+                warn!("unexpected status: {:?}", res);
+            }
+        },
+        Err(ResponseError(res)) => {
+            info!("Removing token {} due to error {:?}.", device_token, res);
+            if let Err(err) = db.remove(device_token) {
+                error!("failed to remove {}: {:?}", device_token, err);
+            }
+        }
+        Err(err) => {
+            error!("failed to send notification: {}, {:?}", device_token, err);
+        }
+    }
+}
+
 async fn wakeup(db: &sled::Db, client: &Client, topic: Option<&str>) {
     let tokens = db
         .iter()
@@ -42,37 +76,10 @@ async fn wakeup(db: &sled::Db, client: &Client, topic: Option<&str>) {
         .collect::<Vec<_>>();
 
     info!("sending notifications to {} devices", tokens.len());
-
-    for device_token in tokens {
-        info!("notify: {}", device_token);
-
-        let payload = SilentNotificationBuilder::new().build(
-            &device_token,
-            NotificationOptions {
-                apns_priority: Some(Priority::Normal),
-                apns_topic: topic,
-                ..Default::default()
-            },
-        );
-
-        match client.send(payload).await {
-            Ok(res) => match res.code {
-                200 => {
-                    info!("delivered notification for {}", device_token);
-                }
-                _ => {
-                    warn!("unexpected status: {:?}", res);
-                }
-            },
-            Err(ResponseError(res)) => {
-                info!("Removing token {} due to error {:?}.", &device_token, res);
-                if let Err(err) = db.remove(&device_token) {
-                    error!("failed to remove {}: {:?}", &device_token, err);
-                }
-            }
-            Err(err) => {
-                error!("failed to send notification: {}, {:?}", device_token, err);
-            }
-        }
-    }
+    join_all(
+        tokens
+            .iter()
+            .map(|device_token| async move { wakeup_token(db, client, device_token, topic).await }),
+    )
+    .await;
 }
