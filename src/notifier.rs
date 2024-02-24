@@ -1,6 +1,6 @@
 use a2::{
-    Client, Endpoint, Error::ResponseError, NotificationBuilder, NotificationOptions, Priority,
-    SilentNotificationBuilder,
+    Client, DefaultNotificationBuilder, Endpoint, Error::ResponseError, NotificationBuilder,
+    NotificationOptions, Priority,
 };
 use anyhow::Result;
 use async_std::prelude::*;
@@ -46,14 +46,23 @@ async fn wakeup(db: &sled::Db, client: &Client, topic: Option<&str>) {
     for device_token in tokens {
         info!("notify: {}", device_token);
 
-        let payload = SilentNotificationBuilder::new().build(
-            &device_token,
-            NotificationOptions {
-                apns_priority: Some(Priority::Normal),
-                apns_topic: topic,
-                ..Default::default()
-            },
-        );
+        // Sent silent notification.
+        // According to <https://developer.apple.com/documentation/usernotifications/generating-a-remote-notification>
+        // to send a silent notification you need to set background notification flag `content-available` to 1
+        // and don't include `alert`, `badge` or `sound`.
+        let payload = DefaultNotificationBuilder::new()
+            .set_content_available()
+            .build(
+                &device_token,
+                NotificationOptions {
+                    // Normal priority (5) means
+                    // "send the notification based on power considerations on the user’s device".
+                    // <https://developer.apple.com/documentation/usernotifications/sending-notification-requests-to-apns>
+                    apns_priority: Some(Priority::Normal),
+                    apns_topic: topic,
+                    ..Default::default()
+                },
+            );
 
         match client.send(payload).await {
             Ok(res) => match res.code {
