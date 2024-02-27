@@ -8,7 +8,6 @@ use log::*;
 
 pub async fn start(
     db: &sled::Db,
-    endpoint: Endpoint,
     mut certificate: std::fs::File,
     password: &str,
     topic: Option<&str>,
@@ -18,6 +17,7 @@ pub async fn start(
         "Waking up devices every {}",
         humantime::format_duration(interval)
     );
+    let endpoint = Endpoint::Production;
     let client = Client::certificate(&mut certificate, password, endpoint)?;
 
     // first wakeup on startup
