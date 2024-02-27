@@ -8,10 +8,11 @@ use log::*;
 
 use crate::state::State;
 
-pub async fn start(state: State, topic: Option<&str>, interval: std::time::Duration) -> Result<()> {
+pub async fn start(state: State, interval: std::time::Duration) -> Result<()> {
     let db = state.db();
     let production_client = state.production_client();
     let sandbox_client = state.sandbox_client();
+    let topic = state.topic();
 
     info!(
         "Waking up devices every {}",
@@ -56,7 +57,7 @@ async fn wakeup(
                 (production_client, device_token.as_str())
             };
 
-        // Sent silent notification.
+        // Send silent notification.
         // According to <https://developer.apple.com/documentation/usernotifications/generating-a-remote-notification>
         // to send a silent notification you need to set background notification flag `content-available` to 1
         // and don't include `alert`, `badge` or `sound`.

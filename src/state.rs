@@ -18,10 +18,17 @@ pub struct InnerState {
     production_client: Client,
 
     sandbox_client: Client,
+
+    topic: Option<String>,
 }
 
 impl State {
-    pub fn new(db: &PathBuf, mut certificate: std::fs::File, password: &str) -> Result<Self> {
+    pub fn new(
+        db: &PathBuf,
+        mut certificate: std::fs::File,
+        password: &str,
+        topic: Option<String>,
+    ) -> Result<Self> {
         let db = sled::open(db)?;
         let production_client =
             Client::certificate(&mut certificate, password, Endpoint::Production)
@@ -37,6 +44,7 @@ impl State {
                 db,
                 production_client,
                 sandbox_client,
+                topic,
             }),
         })
     }
@@ -51,5 +59,9 @@ impl State {
 
     pub fn sandbox_client(&self) -> &Client {
         &self.inner.sandbox_client
+    }
+
+    pub fn topic(&self) -> Option<&str> {
+        self.inner.topic.as_deref()
     }
 }
