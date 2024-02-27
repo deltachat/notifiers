@@ -8,9 +8,6 @@ use notifiers::{notifier, server};
 
 #[derive(Debug, StructOpt)]
 struct Opt {
-    /// If set, this will use the sandbox servers, instead of the production ones.
-    #[structopt(short, long)]
-    sandbox: bool,
     /// Path to the certificate file PKS12.
     #[structopt(long, parse(from_os_str))]
     certificate_file: PathBuf,
@@ -38,11 +35,6 @@ async fn main() -> Result<()> {
     femme::start();
 
     let opt = Opt::from_args();
-    let endpoint = if opt.sandbox {
-        a2::Endpoint::Sandbox
-    } else {
-        a2::Endpoint::Production
-    };
     let certificate = std::fs::File::open(&opt.certificate_file).context("invalid certificate")?;
 
     let state = server::State::new(&opt.db)?;
@@ -55,7 +47,6 @@ async fn main() -> Result<()> {
     let notif = async_std::task::spawn(async move {
         notifier::start(
             state.db(),
-            endpoint,
             certificate,
             &opt.password,
             opt.topic.as_deref(),
