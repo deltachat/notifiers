@@ -6,14 +6,14 @@ edition = "2018"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-async-std = { version = "1.9", features = ["tokio1", "attributes", "unstable"] }
 a2 = "0.8"
-sled = "0.34.2"
-structopt = "0.3.15"
-tide = "0.16.0"
 anyhow = "1.0.32"
-log = "0.4.11"
-serde = { version = "1.0.114", features = ["derive"] }
+async-std = { version = "1.9", features = ["tokio1", "attributes", "unstable"] }
 femme = "2.1.0"
 humantime = "2.0.1"
 hyper = { version = "0.14", features = ["tcp"] }
+log = "0.4.11"
+serde = { version = "1.0.114", features = ["derive"] }
+sled = "0.34.2"
+structopt = "0.3.15"
+tide = "0.16.0"
