@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use async_std::prelude::*;
 use structopt::StructOpt;
 
-use notifiers::{notifier, server};
+use notifiers::{notifier, server, state};
 
 #[derive(Debug, StructOpt)]
 struct Opt {
@@ -37,7 +37,7 @@ async fn main() -> Result<()> {
     let opt = Opt::from_args();
     let certificate = std::fs::File::open(&opt.certificate_file).context("invalid certificate")?;
 
-    let state = server::State::new(&opt.db)?;
+    let state = state::State::new(&opt.db, certificate, &opt.password)?;
 
     let state2 = state.clone();
     let host = opt.host.clone();
@@ -45,14 +45,7 @@ async fn main() -> Result<()> {
     let server = async_std::task::spawn(async move { server::start(state2, host, port).await });
 
     let notif = async_std::task::spawn(async move {
-        notifier::start(
-            state.db(),
-            certificate,
-            &opt.password,
-            opt.topic.as_deref(),
-            opt.interval,
-        )
-        .await
+        notifier::start(state, opt.topic.as_deref(), opt.interval).await
     });
 
     server.try_join(notif).await?;

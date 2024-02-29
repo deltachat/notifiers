@@ -1,36 +1,30 @@
 use a2::{
-    Client, DefaultNotificationBuilder, Endpoint, Error::ResponseError, NotificationBuilder,
+    Client, DefaultNotificationBuilder, Error::ResponseError, NotificationBuilder,
     NotificationOptions, Priority,
 };
-use anyhow::{Context as _, Result};
+use anyhow::Result;
 use async_std::prelude::*;
 use log::*;
-use std::io::Seek;
 
-pub async fn start(
-    db: &sled::Db,
-    mut certificate: std::fs::File,
-    password: &str,
-    topic: Option<&str>,
-    interval: std::time::Duration,
-) -> Result<()> {
+use crate::state::State;
+
+pub async fn start(state: State, topic: Option<&str>, interval: std::time::Duration) -> Result<()> {
+    let db = state.db();
+    let production_client = state.production_client();
+    let sandbox_client = state.sandbox_client();
+
     info!(
         "Waking up devices every {}",
         humantime::format_duration(interval)
     );
-    let production_client = Client::certificate(&mut certificate, password, Endpoint::Production)
-        .context("Failed to create production client")?;
-    certificate.rewind()?;
-    let sandbox_client = Client::certificate(&mut certificate, password, Endpoint::Sandbox)
-        .context("Failed to create sandbox client")?;
 
     // first wakeup on startup
-    wakeup(db, &production_client, &sandbox_client, topic).await;
+    wakeup(db, production_client, sandbox_client, topic).await;
 
     // create interval
     let mut interval = async_std::stream::interval(interval);
     while interval.next().await.is_some() {
-        wakeup(db, &production_client, &sandbox_client, topic).await;
+        wakeup(db, production_client, sandbox_client, topic).await;
     }
 
     Ok(())

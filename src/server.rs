@@ -1,9 +1,8 @@
-use std::path::PathBuf;
-
 use anyhow::Result;
-use async_std::sync::Arc;
 use log::*;
 use serde::Deserialize;
+
+use crate::state::State;
 
 pub async fn start(state: State, server: String, port: u16) -> Result<()> {
     let mut app = tide::with_state(state);
@@ -13,31 +12,6 @@ pub async fn start(state: State, server: String, port: u16) -> Result<()> {
     info!("Listening on {server}:port");
     app.listen((server, port)).await?;
     Ok(())
-}
-
-#[derive(Debug, Clone)]
-pub struct State {
-    inner: Arc<InnerState>,
-}
-
-#[derive(Debug)]
-pub struct InnerState {
-    db: sled::Db,
-}
-
-impl State {
-    pub fn new(db: &PathBuf) -> Result<Self> {
-        let db = sled::open(db)?;
-        info!("{} devices registered currently", db.len());
-
-        Ok(State {
-            inner: Arc::new(InnerState { db }),
-        })
-    }
-
-    pub fn db(&self) -> &sled::Db {
-        &self.inner.db
-    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
