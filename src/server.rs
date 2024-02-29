@@ -15,17 +15,9 @@ pub async fn start(state: State, server: String, port: u16) -> Result<()> {
     Ok(())
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct State {
     inner: Arc<InnerState>,
-}
-
-impl Clone for State {
-    fn clone(&self) -> Self {
-        Self {
-            inner: self.inner.clone(),
-        }
-    }
 }
 
 #[derive(Debug)]
