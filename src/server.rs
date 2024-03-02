@@ -54,6 +54,7 @@ async fn notify_device(mut req: tide::Request<State>) -> tide::Result<tide::Resp
         .set_title_loc_key("new_messages") // Localization key for the title.
         .set_body("You have new messages")
         .set_loc_key("new_messages_body") // Localization key for the body.
+        .set_sound("default")
         .set_mutable_content()
         .build(
             device_token,
