@@ -5,8 +5,7 @@ version = 3
 [[package]]
 name = "a2"
 version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da60b150c4846f18f007bbdf912cefe83aaa88fe6725b8bfc3529e5fd3caa895"
+source = "git+https://github.com/gferon/a2/?branch=apns-push-type#a8d689273bd456a54a9cab8043e1caa308ac16ca"
 dependencies = [
  "base64 0.20.0",
  "erased-serde",
