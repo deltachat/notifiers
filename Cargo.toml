@@ -6,7 +6,7 @@ edition = "2018"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-a2 = "0.8"
+a2 = { git = "https://github.com/gferon/a2/", branch = "apns-push-type" }
 anyhow = "1.0.32"
 async-std = { version = "1.9", features = ["tokio1", "attributes", "unstable"] }
 femme = "2.1.0"
