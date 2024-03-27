@@ -1,6 +1,6 @@
 use a2::{
     DefaultNotificationBuilder, Error::ResponseError, NotificationBuilder, NotificationOptions,
-    Priority,
+    Priority, PushType,
 };
 use anyhow::Result;
 use log::*;
@@ -63,6 +63,7 @@ async fn notify_device(mut req: tide::Request<State>) -> tide::Result<tide::Resp
                 // <https://developer.apple.com/documentation/usernotifications/sending-notification-requests-to-apns>
                 apns_priority: Some(Priority::High),
                 apns_topic: req.state().topic(),
+                apns_push_type: Some(PushType::Alert),
                 ..Default::default()
             },
         );
